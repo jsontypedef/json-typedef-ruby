@@ -1,3 +1,3 @@
-module Jtd
+module JTD
   VERSION = "0.1.0"
 end

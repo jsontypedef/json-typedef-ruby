@@ -1,6 +1,6 @@
 require "jtd/version"
 
-module Jtd
+module JTD
   class Error < StandardError; end
   # Your code goes here...
 end
