@@ -19,3 +19,6 @@ jobs:
       - run: bundle install
       - run: bundle exec rake spec
       - run: gem build
+      - run: GEM_HOST_API_KEY=$GEM_HOST_API_KEY gem push *.gem
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
