@@ -1,6 +1,6 @@
-require "jtd/version"
+require 'jtd/schema'
+require 'jtd/validate'
+require 'jtd/version'
 
 module JTD
-  class Error < StandardError; end
-  # Your code goes here...
 end
