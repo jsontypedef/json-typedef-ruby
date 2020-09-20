@@ -1,4 +1,4 @@
 module JTD
   # The version of the +jtd+ gem you are using.
-  VERSION = "0.1.2"
+  VERSION = "0.1.3"
 end
