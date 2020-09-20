@@ -1,6 +1,26 @@
 require 'time'
 
 module JTD
+  # Validates +instance+ against +schema+ according to the JSON Type Definition
+  # specification.
+  #
+  # Returns a list of ValidationError. If there are no validation errors, then
+  # the returned list will be empty.
+  #
+  # By default, all errors are returned, and an unlimited number of references
+  # will be followed. If you are running #validate against schemas that may
+  # return a lot of errors, or which may contain circular references, then this
+  # can cause performance issues or stack overflows.
+  #
+  # To mitigate this risk, consider using +options+, which must be an instance
+  # of ValidationOptions, to limit the number of errors returned or references
+  # followed.
+  #
+  # If ValidationOptions#max_depth is reached, then #validate will raise a
+  # MaxDepthExceededError.
+  #
+  # The return value of #validate is not well-defined if the schema is not
+  # valid, i.e. Schema#verify raises an error.
   def self.validate(schema, instance, options = ValidationOptions.new)
     state = ValidationState.new
     state.options = options
@@ -19,16 +39,64 @@ module JTD
     state.errors
   end
 
+  # Options you can pass to JTD::validate.
   class ValidationOptions
-    attr_accessor :max_depth, :max_errors
+    # The maximum number of references to follow before aborting validation. You
+    # can use this to prevent a stack overflow when validating schemas that
+    # potentially have infinite loops, such as this one:
+    #
+    #   {
+    #     "definitions": {
+    #       "loop": { "ref": "loop" }
+    #     },
+    #     "ref": "loop"
+    #   }
+    #
+    # The default value for +max_depth+ is 0, which indicates that no max depth
+    # should be imposed at all.
+    attr_accessor :max_depth
 
+    # The maximum number of errors to return. You can use this to have
+    # JTD::validate have better performance if you don't have any use for errors
+    # beyond a certain count.
+    #
+    # For instance, if all you care about is whether or not there are any
+    # validation errors at all, you can set +max_errors+ to 1. If you're
+    # presenting validation errors in an interface that can't show more than 5
+    # errors, set +max_errors+ to 5.
+    #
+    # The default value for +max_errors+ is 0, which indicates that all errors
+    # will be returned.
+    attr_accessor :max_errors
+
+    # Construct a new set of ValidationOptions with the given +max_depth+ and
+    # +max_errors+.
+    #
+    # See the documentation for +max_depth+ and +max_errors+ for what their
+    # default values of 0 mean.
     def initialize(max_depth: 0, max_errors: 0)
       @max_depth = max_depth
       @max_errors = max_errors
     end
   end
 
+  # Represents a single JSON Type Definition validation error.
+  #
+  # ValidationError does not extend StandardError; it is not a Ruby exception.
+  # It is a plain old Ruby object.
+  #
+  # Every ValidationError has two attributes:
+  #
+  # * +instance_path+ is an array of strings. It represents the path to the part
+  #   of the +instance+ passed to JTD::validate that was rejected.
+  #
+  # * +schema_path+ is an array of strings. It represents the path to the part
+  #   of the +schema+ passed to JTD::validate that rejected the instance at
+  #   +instance_path+.
   class ValidationError < Struct.new(:instance_path, :schema_path)
+
+    # Constructs a new ValidationError from the standard JSON representation of
+    # a validation error in JSON Type Definition.
     def self.from_hash(hash)
       instance_path = hash['instancePath']
       schema_path = hash['schemaPath']
@@ -37,7 +105,10 @@ module JTD
     end
   end
 
+  # Error raised from JTD::validate if the number of references followed exceeds
+  # ValidationOptions#max_depth.
   class MaxDepthExceededError < StandardError
+    # Constructs a new MaxDepthExceededError.
     def initialize(msg = 'max depth exceeded during JTD::validate')
       super
     end
@@ -45,7 +116,7 @@ module JTD
 
   private
 
-  class ValidationState
+  class ValidationState # :nodoc:
     attr_accessor :options, :root_schema, :instance_tokens, :schema_tokens, :errors
 
     def push_instance_token(token)
@@ -73,7 +144,7 @@ module JTD
 
   private_constant :ValidationState
 
-  class MaxErrorsReachedError < StandardError
+  class MaxErrorsReachedError < StandardError # :nodoc:
   end
 
   private_constant :MaxErrorsReachedError

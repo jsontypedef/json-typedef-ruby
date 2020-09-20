@@ -1,4 +1,5 @@
 module JTD
+  # Represents a JSON Type Definition schema.
   class Schema
     attr_accessor *%i[
       metadata
@@ -16,6 +17,17 @@ module JTD
       mapping
     ]
 
+    # Constructs a Schema from a Hash like the kind produced by JSON#parse.
+    #
+    # In other words, #from_hash is meant to be used to convert some parsed JSON
+    # into a Schema.
+    #
+    # If hash isn't a Hash or contains keys that are illegal for JSON Type
+    # Definition, then #from_hash will raise a TypeError.
+    #
+    # If the properties of hash are not of the correct type for a JSON Type
+    # Definition schema (for example, if the "elements" property of hash is
+    # non-nil, but not a hash), then #from_hash may raise a NoMethodError.
     def self.from_hash(hash)
       # Raising this error early makes for a much clearer error for the
       # relatively common case of something that was expected to be an object
@@ -74,6 +86,20 @@ module JTD
       s
     end
 
+    # Raises a TypeError or ArgumentError if the Schema is not correct according
+    # to the JSON Type Definition specification.
+    #
+    # See the JSON Type Definition specification for more details, but a high
+    # level #verify checks such things as:
+    #
+    # 1. Making sure each of the attributes of the Schema are of the right type,
+    # 2. The Schema uses a valid combination of JSON Type Definition keywords,
+    # 3. The Schema isn't ambiguous or unsatisfiable.
+    # 4. The Schema doesn't make references to nonexistent definitions.
+    #
+    # If root is specified, then that root is assumed to contain the schema
+    # being verified. By default, the Schema is considered its own root, which
+    # is usually the desired behavior.
     def verify(root = self)
       self.check_type('metadata', [Hash])
       self.check_type('nullable', [TrueClass, FalseClass])
@@ -173,6 +199,13 @@ module JTD
       self
     end
 
+    # Returns the form that the schema takes on.
+    #
+    # The return value will be one of :empty, :ref:, :type, :enum, :elements,
+    # :properties, :values, or :discriminator.
+    #
+    # If the schema is not well-formed, i.e. calling #verify on it raises an
+    # error, then the return value of #form is not well-defined.
     def form
       return :ref if ref
       return :type if type
