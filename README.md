@@ -44,15 +44,15 @@ a JSON Typedef schema:
 require 'jtd'
 
 schema = JTD::Schema.from_hash({
-    'properties' => {
-        'name' => { 'type' => 'string' },
-        'age' => { 'type' => 'uint32' },
-        'phones' => {
-            'elements' => {
-                'type' => 'string'
-            }
-        }
+  'properties' => {
+    'name' => { 'type' => 'string' },
+    'age' => { 'type' => 'uint32' },
+    'phones' => {
+      'elements' => {
+        'type' => 'string'
+      }
     }
+  }
 })
 
 # JTD::validate returns an array of validation errors. If there were no problems
