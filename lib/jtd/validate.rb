@@ -155,7 +155,6 @@ module JTD
     case schema.form
     when :ref
       state.schema_tokens << ['definitions', schema.ref]
-      p state.schema_tokens.length, state.options, state.options.max_depth
       raise MaxDepthExceededError.new if state.schema_tokens.length == state.options.max_depth
 
       validate_with_state(state, state.root_schema.definitions[schema.ref], instance)
