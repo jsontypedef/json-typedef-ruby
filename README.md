@@ -1,4 +1,4 @@
-# jtd: JSON Validation for Python
+# jtd: JSON Validation for Ruby
 
 [![Gem](https://img.shields.io/gem/v/jtd)](https://rubygems.org/gems/jtd)
 
